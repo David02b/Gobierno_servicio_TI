@@ -13,9 +13,9 @@ import streamlit as st
 
 import datos
 
-ENTIDAD = "Banco Unión"   # ← nombre que aparece en la esquina y en el menú
+ENTIDAD = "Banco Unión"   # nombre que aparece en la esquina y en el menú
 
-st.set_page_config(page_title=f"Dashboard Estratégico TI · {ENTIDAD}", page_icon="📊", layout="wide")
+st.set_page_config(page_title=f"Dashboard Estratégico TI · {ENTIDAD}", layout="wide")
 
 # ============================================================ paleta y estilo
 INDIGO, CIAN, VERDE, AMBAR, ROJO, GRIS = "#4f46e5", "#06b6d4", "#10b981", "#f59e0b", "#ef4444", "#cbd5e1"
@@ -98,9 +98,7 @@ h4 { font-size: 1rem !important; font-weight: 700 !important; color: #0f172a; pa
 .kpi { background: white; border-radius: 16px; padding: 1.1rem 1.2rem; border: 1px solid #e8ecf4;
        box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 6px 18px -10px rgba(15,23,42,.12); height: 100%;
        display: flex; gap: .9rem; align-items: center; }
-.kpi .ico { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; font-size: 1.35rem; flex-shrink: 0; }
 .kpi { padding: clamp(.8rem, 1.1vw, 1.1rem) clamp(.8rem, 1.2vw, 1.2rem) !important; gap: clamp(.55rem, .9vw, .9rem) !important; }
-.kpi .ico { width: clamp(36px, 3vw, 46px) !important; height: clamp(36px, 3vw, 46px) !important; font-size: clamp(1rem, 1.4vw, 1.35rem) !important; }
 .kpi .val { font-size: clamp(1.15rem, 1.7vw, 1.55rem) !important; white-space: nowrap; }
 .kpi .lbl { font-size: clamp(.66rem, .8vw, .78rem) !important; }
 .kpi .sub { font-size: clamp(.68rem, .8vw, .78rem) !important; }
@@ -128,14 +126,13 @@ def millones(v: float) -> str:
 
 
 def hero(titulo: str, sub: str):
-    st.markdown(f'<div class="hero"><div><h1>{titulo}</h1><p>{sub}</p></div><div class="entidad">🏦 {ENTIDAD}</div></div>',
+    st.markdown(f'<div class="hero"><div><h1>{titulo}</h1><p>{sub}</p></div><div class="entidad">{ENTIDAD}</div></div>',
                 unsafe_allow_html=True)
 
 
-def kpi(col, icono: str, etiqueta: str, valor, sub: str = "", color: str = INDIGO, tono: str = ""):
+def kpi(col, etiqueta: str, valor, sub: str = "", color: str = INDIGO, tono: str = ""):
     col.markdown(f"""
-    <div class="kpi">
-      <div class="ico" style="background:{color}1a;color:{color}">{icono}</div>
+    <div class="kpi" style="border-left:4px solid {color}">
       <div><div class="lbl">{etiqueta}</div><div class="val">{valor}</div>
       <div class="sub {tono}">{sub}</div></div>
     </div>""", unsafe_allow_html=True)
@@ -181,16 +178,16 @@ def cargar(_mtime: float):
 
 # ============================================================ barra lateral
 PAGINAS = {
-    "🏠  Resumen": "Resumen", "🎯  Balanced Scorecard": "BSC", "🚀  Innovación y Transformación": "DVP",
-    "🏗️  Arquitectura Empresarial": "Arq", "📁  Portafolio Estratégico": "Port", "🛡️  Riesgos Estratégicos": "Riesgos",
-    "🧭  Contexto estratégico": "Ctx", "🔍  Calidad de datos": "Calidad",
+    "Resumen": "Resumen", "Balanced Scorecard": "BSC", "Innovación y Transformación": "DVP",
+    "Arquitectura Empresarial": "Arq", "Portafolio Estratégico": "Port", "Riesgos Estratégicos": "Riesgos",
+    "Contexto estratégico": "Ctx", "Calidad de datos": "Calidad",
 }
 with st.sidebar:
-    st.markdown(f'<div class="brand">📊 Dashboard TI</div><div class="brand-sub">🏦 {ENTIDAD} · Gobierno y Servicios de TI</div>',
+    st.markdown(f'<div class="brand">Dashboard TI</div><div class="brand-sub">{ENTIDAD} · Gobierno y Servicios de TI</div>',
                 unsafe_allow_html=True)
     pagina = PAGINAS[st.radio("Navegación", list(PAGINAS), label_visibility="collapsed")]
     st.markdown("<br>", unsafe_allow_html=True)
-    recargar = st.button("🔄  Recargar datos")
+    recargar = st.button("Recargar datos")
     if recargar:
         st.cache_data.clear()
 
@@ -209,15 +206,15 @@ cargando.empty()
 st.session_state["cargado"] = True
 if recargar:
     if estado_fuente in ("Google Drive", "Excel local"):
-        st.toast("Datos actualizados", icon="✅")
+        st.toast("Datos actualizados")
     else:
-        st.toast("No se pudo actualizar; se muestra la última copia", icon="⚠️")
+        st.toast("No se pudo actualizar; se muestra la última copia")
 K = D["kpis"]
 with st.sidebar:
     if D["alertas"]:
-        st.markdown(f"<div class='side-foot'>⚠️ {len(D['alertas'])} alertas de calidad en el Excel</div>", unsafe_allow_html=True)
-    origen = "☁️ Google Drive" if estado_fuente == "Google Drive" else ("⚠️ " + estado_fuente if "Drive" in estado_fuente else "📄 " + datos.ARCHIVO.name)
-    st.markdown(f"<div class='side-foot'>{origen}<br>🕒 Datos del {dt.datetime.fromtimestamp(mtime):%d/%m/%Y %H:%M}</div>",
+        st.markdown(f"<div class='side-foot'>{len(D['alertas'])} alertas de calidad en el Excel</div>", unsafe_allow_html=True)
+    origen = "Fuente: Google Drive" if estado_fuente == "Google Drive" else (estado_fuente if "Drive" in estado_fuente else "Fuente: " + datos.ARCHIVO.name)
+    st.markdown(f"<div class='side-foot'>{origen}<br>Datos del {dt.datetime.fromtimestamp(mtime):%d/%m/%Y %H:%M}</div>",
                 unsafe_allow_html=True)
 
 # ============================================================ páginas
@@ -225,18 +222,17 @@ if pagina == "Resumen":
     hero("Dashboard Estratégico", "Visión general del portafolio, presupuesto, desempeño y riesgos de TI")
     p = K["presupuesto_por_anio"]
     c = st.columns(4)
-    iconos = ["💰", "💵", "🪙"]
     for i, (col, (anio, v)) in enumerate(zip(c, p.items())):
-        kpi(col, iconos[i % 3], f"Presupuesto {anio}", millones(v), "Pesos colombianos", [INDIGO, CIAN, "#8b5cf6"][i % 3])
+        kpi(col, f"Presupuesto {anio}", millones(v), "Pesos colombianos", [INDIGO, CIAN, "#8b5cf6"][i % 3])
     bsc_ok = K["bsc_global"] >= 90
-    kpi(c[3], "🎯", "BSC Global", f"{K['bsc_global']:.1f}%", "Cumplimiento vs meta", VERDE if bsc_ok else AMBAR,
+    kpi(c[3], "BSC Global", f"{K['bsc_global']:.1f}%", "Cumplimiento vs meta", VERDE if bsc_ok else AMBAR,
         "good" if bsc_ok else "bad")
     espacio()
     c = st.columns(4)
-    kpi(c[0], "📌", "Iniciativas", K["total_iniciativas"], f"{K['iniciativas_ppt']} PPT · {K['iniciativas_pmo']} PMO", INDIGO)
-    kpi(c[1], "⚡", "Presupuesto digital", millones(K["presupuesto_digital"]), "Iniciativas DVP", CIAN)
-    kpi(c[2], "🛡️", "Riesgos", K["riesgos"], f"{K['riesgos_altos']} de impacto alto", ROJO, "bad")
-    kpi(c[3], "⏱️", "PMO con retraso", f"{K['pmo_con_retraso']} / {K['iniciativas_pmo']}",
+    kpi(c[0], "Iniciativas", K["total_iniciativas"], f"{K['iniciativas_ppt']} PPT · {K['iniciativas_pmo']} PMO", INDIGO)
+    kpi(c[1], "Presupuesto digital", millones(K["presupuesto_digital"]), "Iniciativas DVP", CIAN)
+    kpi(c[2], "Riesgos", K["riesgos"], f"{K['riesgos_altos']} de impacto alto", ROJO, "bad")
+    kpi(c[3], "PMO con retraso", f"{K['pmo_con_retraso']} / {K['iniciativas_pmo']}",
         f"{K['retraso_promedio']:.0f} días en promedio", AMBAR, "bad")
     espacio()
     izq, der = st.columns(2)
@@ -259,10 +255,10 @@ elif pagina == "BSC":
     b["Cumplimiento %"] = b["Cumplimiento"] * 100
     b["Estado"] = b["Cumplimiento %"].map(lambda x: "Cumple" if x >= 100 else ("Cerca" if x >= 85 else "Bajo"))
     c = st.columns(4)
-    kpi(c[0], "🎯", "BSC Global", f"{b['Cumplimiento %'].mean():.1f}%", f"{len(b)} indicadores", INDIGO)
-    kpi(c[1], "✅", "Cumplen", int((b["Estado"] == "Cumple").sum()), "≥ 100% de la meta", VERDE, "good")
-    kpi(c[2], "🟡", "Cerca", int((b["Estado"] == "Cerca").sum()), "85% – 99%", AMBAR)
-    kpi(c[3], "🔻", "Bajo meta", int((b["Estado"] == "Bajo").sum()), "< 85%", ROJO, "bad")
+    kpi(c[0], "BSC Global", f"{b['Cumplimiento %'].mean():.1f}%", f"{len(b)} indicadores", INDIGO)
+    kpi(c[1], "Cumplen", int((b["Estado"] == "Cumple").sum()), "≥ 100% de la meta", VERDE, "good")
+    kpi(c[2], "Cerca", int((b["Estado"] == "Cerca").sum()), "85% – 99%", AMBAR)
+    kpi(c[3], "Bajo meta", int((b["Estado"] == "Bajo").sum()), "< 85%", ROJO, "bad")
     espacio()
     persp = st.pills("Perspectiva", b["Perspectiva"].unique(), selection_mode="multi", default=list(b["Perspectiva"].unique()))
     b = b[b["Perspectiva"].isin(persp or [])]
@@ -281,7 +277,7 @@ elif pagina == "BSC":
         st.markdown("#### Detalle")
         st.dataframe(b[["Perspectiva", "Indicador", "Actual", "Meta", "Cumplimiento %"]], hide_index=True, width="stretch", height=400,
                      column_config={"Cumplimiento %": st.column_config.ProgressColumn(min_value=0, max_value=100, format="%.0f%%")})
-    st.caption("ℹ️ En *Costo Total Propiedad TI* menor es mejor (la meta es un tope), por eso se calcula Meta ÷ Actual.")
+    st.caption("Nota: en *Costo Total Propiedad TI* menor es mejor (la meta es un tope), por eso se calcula Meta ÷ Actual.")
 
 elif pagina == "DVP":
     hero("Innovación y Transformación", "Iniciativas de transformación digital (DVP), inversión y rupturas estratégicas")
@@ -289,11 +285,11 @@ elif pagina == "DVP":
     cats = st.pills("Categoría", d["Categoria"].unique(), selection_mode="multi", default=list(d["Categoria"].unique()))
     d = d[d["Categoria"].isin(cats or [])]
     c = st.columns(4)
-    kpi(c[0], "⚡", "Presupuesto digital", millones(d["Presupuesto"].sum()), "Total proyectado", INDIGO)
-    kpi(c[1], "🚀", "Iniciativas", len(d), f"{d['Categoria'].nunique()} categorías", CIAN)
-    kpi(c[2], "🗓️", "Duración promedio", f"{d['Semanas'].mean():.0f} sem", f"{d['Semanas'].sum():.0f} semanas en total", "#8b5cf6")
+    kpi(c[0], "Presupuesto digital", millones(d["Presupuesto"].sum()), "Total proyectado", INDIGO)
+    kpi(c[1], "Iniciativas", len(d), f"{d['Categoria'].nunique()} categorías", CIAN)
+    kpi(c[2], "Duración promedio", f"{d['Semanas'].mean():.0f} sem", f"{d['Semanas'].sum():.0f} semanas en total", "#8b5cf6")
     top = d.nlargest(1, "Presupuesto")
-    kpi(c[3], "🏆", "Mayor inversión", millones(top["Presupuesto"].iloc[0]) if len(top) else "-",
+    kpi(c[3], "Mayor inversión", millones(top["Presupuesto"].iloc[0]) if len(top) else "-",
         (top["Iniciativa"].iloc[0][:32] + "…") if len(top) else "", AMBAR)
     espacio()
     izq, der = st.columns([3, 2])
@@ -323,10 +319,10 @@ elif pagina == "Arq":
     hero("Arquitectura Empresarial", "Inventario tecnológico y dominios estratégicos")
     a = D["arq"].set_index("Métrica")["Valor"]
     c = st.columns(4)
-    for col, (m, ico, colr) in zip(c, [("Aplicaciones", "🧩", INDIGO), ("Aplicaciones Críticas", "🔥", ROJO),
-                                       ("Servidores", "🖥️", CIAN), ("Instancias", "☁️", "#8b5cf6")]):
+    for col, (m, colr) in zip(c, [("Aplicaciones", INDIGO), ("Aplicaciones Críticas", ROJO),
+                                  ("Servidores", CIAN), ("Instancias", "#8b5cf6")]):
         if m in a:
-            kpi(col, ico, m, f"{a[m]:,.0f}".replace(",", "."), "", colr)
+            kpi(col, m, f"{a[m]:,.0f}".replace(",", "."), "", colr)
     espacio()
     c = st.columns(3)
     for col, (titulo, claves, colores) in zip(c, [
@@ -356,11 +352,11 @@ elif pagina == "Port":
     m = m[m["Tipo"].isin(tipos or [])]
     p = D["pmo"]
     c = st.columns(4)
-    kpi(c[0], "📁", "Iniciativas", len(m), " · ".join(f"{k} {v}" for k, v in m["Tipo"].value_counts().items()), INDIGO)
+    kpi(c[0], "Iniciativas", len(m), " · ".join(f"{k} {v}" for k, v in m["Tipo"].value_counts().items()), INDIGO)
     ep = p["Estado"].value_counts()
-    kpi(c[1], "▶️", "PMO en proceso", int(ep.get("En proceso", 0)), "", CIAN)
-    kpi(c[2], "⏸️", "PMO no iniciadas", int(ep.get("No iniciado", 0)), "", GRIS.replace("cbd5e1", "64748b"))
-    kpi(c[3], "⏱️", "Retraso promedio", f"{K['retraso_promedio']:.0f} días", f"{K['pmo_con_retraso']} proyectos retrasados", ROJO, "bad")
+    kpi(c[1], "PMO en proceso", int(ep.get("En proceso", 0)), "", CIAN)
+    kpi(c[2], "PMO no iniciadas", int(ep.get("No iniciado", 0)), "", GRIS.replace("cbd5e1", "64748b"))
+    kpi(c[3], "Retraso promedio", f"{K['retraso_promedio']:.0f} días", f"{K['pmo_con_retraso']} proyectos retrasados", ROJO, "bad")
     espacio()
     izq, der = st.columns(2)
     dom = m.groupby("Dominio").size().rename("Iniciativas").reset_index().sort_values("Iniciativas")
@@ -403,10 +399,10 @@ elif pagina == "Riesgos":
     imp = st.pills("Impacto", ["Alto", "Medio", "Bajo"], selection_mode="multi", default=["Alto", "Medio", "Bajo"])
     r = r[r["IMPACTO"].isin(imp or [])]
     c = st.columns(4)
-    kpi(c[0], "🛡️", "Total riesgos", len(r), f"{r['FRENTE'].nunique()} frentes", INDIGO)
-    for col, (nivel, ico) in zip(c[1:], [("Alto", "🔴"), ("Medio", "🟠"), ("Bajo", "🟢")]):
+    kpi(c[0], "Total riesgos", len(r), f"{r['FRENTE'].nunique()} frentes", INDIGO)
+    for col, nivel in zip(c[1:], ["Alto", "Medio", "Bajo"]):
         n = int((r["IMPACTO"] == nivel).sum())
-        kpi(col, ico, f"Impacto {nivel.lower()}", n, f"{n / max(len(r), 1):.0%} del total", COLOR_IMPACTO[nivel])
+        kpi(col, f"Impacto {nivel.lower()}", n, f"{n / max(len(r), 1):.0%} del total", COLOR_IMPACTO[nivel])
     espacio()
     izq, der = st.columns([3, 2])
     g = r.groupby(["FRENTE", "IMPACTO"]).size().rename("Riesgos").reset_index()
@@ -426,15 +422,15 @@ elif pagina == "Riesgos":
 elif pagina == "Ctx":
     hero("Contexto Estratégico", "Análisis DOFA, fuerzas de Porter e indicadores del dominio TI")
     dofa = D["dofa"]
-    estilos = {"Fortaleza": ("💪", VERDE), "Debilidad": ("⚠️", AMBAR), "Oportunidad": ("🌱", CIAN), "Amenaza": ("⚡", ROJO)}
+    estilos = {"Fortaleza": VERDE, "Debilidad": AMBAR, "Oportunidad": CIAN, "Amenaza": ROJO}
     plural = {"Fortaleza": "Fortalezas", "Debilidad": "Debilidades", "Oportunidad": "Oportunidades", "Amenaza": "Amenazas"}
     c = st.columns(4)
     for col, tipo in zip(c, estilos):
-        ico, colr = estilos[tipo]
+        colr = estilos[tipo]
         items = "".join(f"<div class='chip' style='background:{colr}1a;color:{colr}'>{x}</div>"
                         for x in dofa.loc[dofa["Tipo"] == tipo, "Descripción"].astype(str))
         col.markdown(f"<div class='kpi' style='display:block;border-top:4px solid {colr}'>"
-                     f"<div class='lbl' style='margin-bottom:.6rem'>{ico} {plural[tipo]}</div>{items}</div>", unsafe_allow_html=True)
+                     f"<div class='lbl' style='margin-bottom:.6rem'>{plural[tipo]}</div>{items}</div>", unsafe_allow_html=True)
     espacio()
     izq, der = st.columns([1, 1])
     nivel = {"Bajo": 1, "Baja": 1, "Medio-Bajo": 1.5, "Medio": 2, "Media": 2, "Medio-Alto": 2.5, "Alto": 3, "Alta": 3}
@@ -463,6 +459,6 @@ elif pagina == "Calidad":
     hero("Calidad de Datos", "Inconsistencias detectadas en el Excel fuente. El dashboard ya las corrige al calcular, "
                              "pero conviene arreglarlas en el archivo.")
     if not D["alertas"]:
-        st.success("✅ No se encontraron inconsistencias.")
+        st.success("No se encontraron inconsistencias.")
     for i, a in enumerate(D["alertas"], 1):
         st.markdown(f"<div class='alerta'><b>#{i}</b>&nbsp;&nbsp;{a}</div>", unsafe_allow_html=True)
