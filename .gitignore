@@ -1,0 +1,12 @@
+# Notas personales: NO se suben
+Notas.txt
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Archivos temporales de Excel / descargas
+~$*.xlsx
+*.tmp
+_copia_drive.xlsx
