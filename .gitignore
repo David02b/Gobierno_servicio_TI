@@ -10,3 +10,10 @@ __pycache__/
 ~$*.xlsx
 *.tmp
 _copia_drive.xlsx
+
+# Documentos de referencia
+PETI/
+peti/
+
+# Archivos de apoyo
+hojas_para_drive/
