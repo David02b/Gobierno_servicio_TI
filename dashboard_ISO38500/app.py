@@ -407,7 +407,6 @@ seccion = st.sidebar.radio("Secciones", [
     "Riesgos",
     "Arquitectura",
     "Contexto",
-    "Calidad de datos",
 ])
 st.sidebar.divider()
 if st.sidebar.button("Recargar datos"):
@@ -587,14 +586,27 @@ elif seccion == "ISO 38500":
             evaluacion_iso[evaluacion_iso["Resultado"] == resultado_eval]
         mostrar_evaluacion(datos_eval, f"Puntos de la norma evaluados: {len(datos_eval)}")
 
-    # Principios que todavía no tienen datos en el Excel
+    # Brechas y plan de acción: principios sin indicadores y las iniciativas del portafolio que los atienden
     if principios_sin_datos:
+        BRECHAS = {
+            "Datos y decisiones": ("No hay indicadores de calidad ni de uso de los datos",
+                                   ["gobernanza del dato", "Analytics"]),
+            "Gobierno del riesgo": ("La matriz de riesgos no tiene tratamiento ni seguimiento",
+                                    ["SIAR"]),
+        }
+        filas_plan = []
+        for principio in principios_sin_datos:
+            brecha, claves = BRECHAS.get(principio, ("Sin indicadores", []))
+            for clave in claves:
+                for _, f in dvp[dvp["Iniciativa"].str.contains(clave, case=False, na=False)].iterrows():
+                    filas_plan.append([principio, brecha, f["Iniciativa"], "DVP", millones(f["Presupuesto"]), "Propuesta"])
+                for _, f in pmo[pmo["Iniciativa/Proyecto"].str.contains(clave, case=False, na=False)].iterrows():
+                    filas_plan.append([principio, brecha, f["Iniciativa/Proyecto"], "PMO", millones(f["Presupuesto"]),
+                                       f["Estado"]])
         with st.container(border=True):
-            st.markdown("**Principios sin datos**")
-            st.dataframe(pd.DataFrame({
-                "Principio": principios_sin_datos,
-                "Estado": ["Sin datos" for _ in principios_sin_datos],
-            }), hide_index=True)
+            st.markdown("**Brechas y plan de acción**")
+            st.dataframe(pd.DataFrame(filas_plan, columns=["Principio", "Brecha", "Acción en el portafolio",
+                                                           "Origen", "Presupuesto", "Estado"]), hide_index=True)
 
 
 # ---------------------------------------------------------------- Gobierno de Datos
@@ -980,26 +992,3 @@ elif seccion == "Contexto":
         st.write("Indicadores del dominio TI:", hoja("Indicadores Dominio TI").dropna(subset=["INDICADOR"]).astype(str))
 
 
-# ---------------------------------------------------------------- Calidad de datos
-elif seccion == "Calidad de datos":
-    st.header("Calidad de datos")
-
-    pmo_original = hoja("Detalle iniciativa pmo")
-    filas_ref = int((pmo_original == "#REF!").any(axis=1).sum())
-    if filas_ref:
-        st.warning(f"Hoja 'Detalle iniciativa pmo': {filas_ref} filas con #REF! en MEGA / Objetivo Estratégico.")
-    estados = pmo_original["Estado"].dropna().str.strip().unique()
-    if len(estados) != len({e.lower() for e in estados}):
-        st.warning("Hay estados escritos con distinta mayúscula ('En Proceso' y 'En proceso').")
-    if (hoja("Riesgos")["IMPACTO"].str.strip() == "Moderado").any():
-        st.warning("En Riesgos se usan 'Moderado' y 'Medio' para el mismo nivel.")
-    resumen = hoja("Resumen Ejecutivo").set_index("Indicador")["Valor"]
-    total_pmo = int((maestra["Tipo"] == "PMO").sum())
-    if "Total Iniciativas PMO" in resumen and int(resumen["Total Iniciativas PMO"]) != total_pmo:
-        st.warning(f"'Resumen Ejecutivo' dice {int(resumen['Total Iniciativas PMO'])} iniciativas PMO, pero hay {total_pmo}.")
-    if "BSC Global" in resumen:
-        st.warning(f"'Resumen Ejecutivo' tiene el BSC Global fijo en {resumen['BSC Global']}; "
-                   f"calculado contra las metas da {bsc['Cumplimiento %'].mean():.1f}.")
-    sin_clasificar = int((maestra["Dominio"] == "Por Clasificar").sum())
-    if sin_clasificar:
-        st.warning(f"MAESTRA_INICIATIVAS: {sin_clasificar} iniciativas 'Por Clasificar' en Dominio, Cadena de valor y Pilar.")
