@@ -1,3 +1,16 @@
+"""Dashboard estratégico de Gobierno de TI — ISO/IEC 38500:2024.
+
+Lee el Excel de Google Drive (con copia local de respaldo), calcula las métricas
+de los principios de la sección 5, las tareas del modelo de la sección 6.2 y los
+resultados del buen gobierno de TI de la sección 4.1, y los presenta en
+secciones interactivas con Streamlit.
+
+Ejecutar:  doble clic en iniciar.bat   (o)   python -m streamlit run app.py
+
+La documentación de arquitectura, contrato de datos y versionado está en
+``docs/`` en la raíz del repositorio.
+"""
+
 import io  # Leer el archivo descargado en memoria
 import urllib.request  # Descargar el Excel desde Google Drive
 from pathlib import Path  # Manejo de rutas de archivos
@@ -6,6 +19,8 @@ import matplotlib.pyplot as plt  # Visualización de datos en Python
 import pandas as pd  # Manipulación y análisis de datos
 import seaborn as sns  # Interfaz para visualización de datos estadísticos (Integra con Pandas)
 import streamlit as st  # Librería para crear aplicaciones web interactivas en Python
+
+__version__ = "1.0.0"
 
 # Configuración de la página
 st.set_page_config(page_title="Dashboard TI", layout="wide")
@@ -57,7 +72,11 @@ PRINCIPIOS_ISO = {NOMBRES_ISO[p]: sec for p, sec in PRINCIPIOS_ISO_ES.items()}
 
 
 def nombre_iso(serie):
-    # Pasa los nombres en español al nombre de la norma (si ya lo tienen, los deja igual)
+    """Convierte los nombres en español al nombre bilingüe de la norma.
+
+    Si el valor ya viene bilingüe o no está en ``NOMBRES_ISO``, se deja igual.
+    Los valores nulos se conservan.
+    """
     return serie.map(lambda v: NOMBRES_ISO.get(str(v).strip(), v) if pd.notna(v) else v)
 
 # Columnas de las hojas que el banco debe llenar
@@ -79,6 +98,12 @@ ARCHIVO_LOCAL = Path(__file__).parent / "Extraido_CIO_Completo.xlsx"
 
 @st.cache_data(ttl=300)  # Se vuelve a descargar cada 5 minutos
 def cargar_excel():
+    """Descarga el Excel de Google Drive o usa la copia local.
+
+    Devuelve una tupla ``(contenido_bytes, fuente)``. Se valida la cabecera
+    ``PK`` para asegurar que Drive devolvió un archivo .xlsx y no una página
+    de inicio de sesión.
+    """
     for url in URLS_DRIVE:
         try:
             with urllib.request.urlopen(url, timeout=20) as respuesta:
@@ -92,6 +117,11 @@ def cargar_excel():
 
 @st.cache_data(ttl=300)
 def leer_hojas(contenido):
+    """Lee todas las hojas del Excel y las limpia.
+
+    Elimina columnas ``Unnamed``, recorta los encabezados y descarta las filas
+    completamente vacías. Devuelve un diccionario ``nombre_hoja -> DataFrame``.
+    """
     hojas = pd.read_excel(io.BytesIO(contenido), sheet_name=None)
     for nombre, df in hojas.items():
         df = df.loc[:, ~df.columns.astype(str).str.startswith("Unnamed")]  # Quitar columnas vacías
@@ -102,6 +132,7 @@ def leer_hojas(contenido):
 
 @st.cache_data
 def leer_hoja_local(nombre):
+    """Lee una hoja del Excel local de respaldo."""
     return pd.read_excel(ARCHIVO_LOCAL, sheet_name=nombre)
 
 
@@ -112,29 +143,35 @@ with st.spinner("Cargando datos..."):
 
 
 def hoja(nombre):
-    # Usa la hoja de Drive; si todavía no existe allá, la toma del Excel local
+    """Devuelve una copia de la hoja descargada o, si no existe, la local."""
     if nombre in hojas:
         return hojas[nombre].copy()
     return leer_hoja_local(nombre)
 
 
 def numero(serie):
-    # Convierte a número aceptando "99.6" o "99,6" (Google Sheets en español usa coma decimal)
+    """Convierte una serie a número aceptando coma o punto decimal."""
     return pd.to_numeric(serie.astype(str).str.replace(",", ".", regex=False).str.strip(), errors="coerce")
 
 
 def millones(valor):
+    """Formatea un valor en pesos como millones, por ejemplo ``$360 M``."""
     return "$" + f"{valor / 1_000_000:,.0f}".replace(",", ".") + " M"
 
 
 def cumplimiento(actual, meta, menor_es_mejor=False):
-    # Porcentaje de cumplimiento frente a la meta (máximo 100%)
+    """Calcula el porcentaje de cumplimiento frente a la meta, topado a 100.
+
+    Si ``menor_es_mejor`` es verdadero, la meta es un tope y se calcula
+    ``meta / actual``; en caso contrario, ``actual / meta``.
+    """
     if menor_es_mejor:
         return min(meta / actual * 100, 100)
     return min(actual / meta * 100, 100)
 
 
 def estado(valor):
+    """Clasifica el porcentaje de cumplimiento en Cumple, Cerca o Bajo meta."""
     if valor >= 100:
         return "Cumple"
     if valor >= 85:
@@ -143,7 +180,7 @@ def estado(valor):
 
 
 def formato_numero(valor):
-    # 92.0 -> "92" ; 99.6 -> "99,6" ; 360660000 -> "360.660.000"
+    """Formatea un número en estilo colombiano: ``1234.5`` -> ``1.234,5``."""
     if pd.isna(valor):
         return ""
     if float(valor).is_integer():
@@ -152,7 +189,7 @@ def formato_numero(valor):
 
 
 def mostrar_tabla(df, titulo=None, mostrar_indice=False):
-    # Tabla que ajusta el texto al ancho de la columna (no lo corta)
+    """Muestra una tabla con los números formateados y altura según el contenido."""
     if titulo:
         st.markdown(f"**{titulo}**")
     df = df.copy()
@@ -164,7 +201,7 @@ def mostrar_tabla(df, titulo=None, mostrar_indice=False):
 
 
 def barras_horizontales(datos, colores=None, apiladas=True):
-    # Gráfico de barras horizontales con los nombres completos (en varias líneas si son largos)
+    """Dibuja barras horizontales Matplotlib con etiquetas largas en varias líneas."""
     import textwrap
     df = datos.to_frame() if isinstance(datos, pd.Series) else datos
     fig, ax = plt.subplots(figsize=(7, max(2.2, len(df) * 0.6)))
@@ -178,14 +215,14 @@ def barras_horizontales(datos, colores=None, apiladas=True):
 
 
 def tabla_porcentaje(serie):
-    # Tabla con cantidad y porcentaje, como la que acompaña a las donas
+    """Devuelve una tabla con la cantidad y el porcentaje de cada valor."""
     tabla = serie.value_counts().rename("Cantidad").to_frame()
     tabla["%"] = (tabla["Cantidad"] / tabla["Cantidad"].sum() * 100).round(1)
     return tabla
 
 
 def grafico_dona(conteo, colores=None):
-    # Gráfico de dona con el total en el centro
+    """Crea una dona Matplotlib con el total en el centro y devuelve la figura."""
     fig, ax = plt.subplots(figsize=(4, 4))
     ax.pie(conteo, colors=colores, startangle=90, counterclock=False,
            wedgeprops={"width": 0.35, "edgecolor": "white"}, autopct="%1.0f%%", pctdistance=0.82)
@@ -194,7 +231,11 @@ def grafico_dona(conteo, colores=None):
 
 
 def hoja_opcional(nombre, columnas):
-    # Hojas que el banco debe llenar; si no existen o están vacías, quedan vacías (no se inventan datos)
+    """Devuelve una hoja opcional o un DataFrame vacío con el contrato indicado.
+
+    Nunca inventa datos: si la hoja no existe o no tiene filas, devuelve un
+    DataFrame vacío con las columnas esperadas.
+    """
     try:
         df = hoja(nombre)
     except Exception:
@@ -206,7 +247,7 @@ def hoja_opcional(nombre, columnas):
 
 
 def mostrar_evaluacion(evaluacion, titulo):
-    # Muestra los puntos de la sección 4.1 de la norma con su estado de evidencia
+    """Muestra los puntos de la sección 4.1 con su estado de evidencia."""
     with st.container(border=True):
         st.markdown(f"**{titulo}**")
         conteo = evaluacion["Estado"].value_counts().reindex(COLORES_EVIDENCIA.keys()).dropna().astype(int)
@@ -227,7 +268,10 @@ def mostrar_evaluacion(evaluacion, titulo):
 
 
 def pendiente(titulo, nombre_hoja, columnas, quien):
-    # Panel para la información que todavía no está en el Excel (no se inventan datos)
+    """Muestra un panel para información que aún no está en el Excel.
+
+    Actualmente no se usa; queda disponible para las secciones opcionales.
+    """
     with st.container(border=True):
         st.markdown(f"**{titulo} - pendiente**")
         st.write(f"Esta información no está en el Excel. Se obtiene de: {quien}. "
@@ -307,7 +351,7 @@ CLAVES_IA = "chat|rpa|automatiz|minería|inteligencia artificial|machine learnin
 
 
 def iniciativas_por_tema(claves):
-    # Junta las iniciativas DVP y los proyectos PMO cuyo nombre contiene alguna palabra clave
+    """Junta iniciativas DVP y proyectos PMO cuyo nombre coincide con el patrón."""
     de_dvp = dvp[dvp["Iniciativa"].str.contains(claves, case=False, na=False)]
     de_pmo = pmo[pmo["Iniciativa/Proyecto"].str.contains(claves, case=False, na=False)]
     return pd.concat([
@@ -323,6 +367,7 @@ iniciativas_ia = iniciativas_por_tema(CLAVES_IA)
 
 # ISO 38500: métricas calculadas solo con datos reales del Excel
 def agregar_metrica(principio, tarea, resultado, metrica, fuente, base, actual, meta, origen_meta, menor_es_mejor=False):
+    """Agrega una métrica ISO a ``metricas_iso``; omite la fila si no hay dato actual."""
     if actual is None or pd.isna(actual):
         return
     metricas_iso.append({"Principio": principio, "Sección": PRINCIPIOS_ISO_ES[principio], "Tarea del modelo": tarea,
@@ -332,7 +377,7 @@ def agregar_metrica(principio, tarea, resultado, metrica, fuente, base, actual, 
 
 
 def agregar_bsc(principio, tarea, resultado, indicador, base, menor_es_mejor=False):
-    # Usa un indicador de la hoja BSC con su meta real
+    """Agrega una métrica ISO tomando el indicador y la meta de la hoja BSC."""
     fila = bsc[bsc["Indicador"].str.strip() == indicador]
     if len(fila):
         agregar_metrica(principio, tarea, resultado, indicador, "Hoja BSC", base,
@@ -340,7 +385,7 @@ def agregar_bsc(principio, tarea, resultado, indicador, base, menor_es_mejor=Fal
 
 
 def porcentaje_con_dato(df, columna):
-    # Porcentaje de filas que tienen ese campo diligenciado
+    """Devuelve el porcentaje de filas con el campo diligenciado."""
     if len(df) == 0 or columna not in df.columns:
         return None
     valores = df[columna].astype("string").str.strip()
@@ -348,7 +393,7 @@ def porcentaje_con_dato(df, columna):
 
 
 def porcentaje_si(df, columna):
-    # Porcentaje de filas con "Sí" en la columna
+    """Devuelve el porcentaje de filas con el valor ``Sí`` en la columna."""
     if len(df) == 0:
         return None
     return float((df[columna].astype(str).str.strip() == "Sí").mean() * 100)
@@ -401,6 +446,7 @@ principios_sin_datos = [p for p in PRINCIPIOS_ISO if p not in set(iso["Principio
 
 
 def hoja_si_existe(nombre):
+    """Devuelve la hoja indicada o ``None`` si no existe."""
     try:
         return hoja(nombre)
     except Exception:
@@ -486,6 +532,7 @@ if st.sidebar.button("Recargar datos"):
     st.cache_data.clear()
     st.rerun()
 st.sidebar.caption(f"Fuente de datos: {fuente}")
+st.sidebar.caption(f"Versión {__version__}")
 
 # Título del dashboard
 st.title("Dashboard Estratégico de Gobierno de TI")
