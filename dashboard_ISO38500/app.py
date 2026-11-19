@@ -142,6 +142,41 @@ def estado(valor):
     return "Bajo meta"
 
 
+def formato_numero(valor):
+    # 92.0 -> "92" ; 99.6 -> "99,6" ; 360660000 -> "360.660.000"
+    if pd.isna(valor):
+        return ""
+    if float(valor).is_integer():
+        return f"{int(valor):,}".replace(",", ".")
+    return f"{valor:,.1f}".replace(",", "X").replace(".", ",").replace("X", ".")
+
+
+def mostrar_tabla(df, titulo=None, mostrar_indice=False):
+    # Tabla que ajusta el texto al ancho de la columna (no lo corta)
+    if titulo:
+        st.markdown(f"**{titulo}**")
+    df = df.copy()
+    for columna in df.columns:
+        if pd.api.types.is_numeric_dtype(df[columna]):
+            df[columna] = df[columna].apply(formato_numero)
+    alto = 450 if len(df) > 12 else "content"
+    st.table(df, hide_index=not mostrar_indice, height=alto)
+
+
+def barras_horizontales(datos, colores=None, apiladas=True):
+    # Gráfico de barras horizontales con los nombres completos (en varias líneas si son largos)
+    import textwrap
+    df = datos.to_frame() if isinstance(datos, pd.Series) else datos
+    fig, ax = plt.subplots(figsize=(7, max(2.2, len(df) * 0.6)))
+    df.plot(kind="barh", stacked=apiladas, ax=ax, color=colores, legend=len(df.columns) > 1, width=0.7)
+    ax.set_yticklabels([textwrap.fill(str(i), 30) for i in df.index], fontsize=9)
+    ax.set_ylabel("")
+    if len(df.columns) > 1:
+        ax.legend(fontsize=8, loc="lower right")
+    st.pyplot(fig)
+    plt.close(fig)
+
+
 def tabla_porcentaje(serie):
     # Tabla con cantidad y porcentaje, como la que acompaña a las donas
     tabla = serie.value_counts().rename("Cantidad").to_frame()
@@ -185,10 +220,10 @@ def mostrar_evaluacion(evaluacion, titulo):
             # Gráfico de barras apiladas: estado por resultado de la norma
             por_resultado = evaluacion.groupby(["Resultado", "Estado"]).size().unstack(fill_value=0)
             por_resultado = por_resultado.reindex(columns=[c for c in COLORES_EVIDENCIA if c in por_resultado.columns])
-            st.bar_chart(por_resultado, horizontal=True, color=[COLORES_EVIDENCIA[c] for c in por_resultado.columns])
+            barras_horizontales(por_resultado, [COLORES_EVIDENCIA[c] for c in por_resultado.columns])
         # Mostrar los puntos evaluados
         with st.expander("Ver puntos evaluados"):
-            st.dataframe(evaluacion[["Resultado", "Punto", "Estado", "Evidencia"]], hide_index=True)
+            mostrar_tabla(evaluacion[["Resultado", "Punto", "Estado", "Evidencia"]])
 
 
 def pendiente(titulo, nombre_hoja, columnas, quien):
@@ -197,7 +232,7 @@ def pendiente(titulo, nombre_hoja, columnas, quien):
         st.markdown(f"**{titulo} - pendiente**")
         st.write(f"Esta información no está en el Excel. Se obtiene de: {quien}. "
                  f"Cuando se llene la hoja '{nombre_hoja}', aquí aparecen sus gráficos.")
-        st.write("Columnas de la hoja:", pd.DataFrame(columns=columnas))
+        mostrar_tabla(pd.DataFrame(columns=columnas), "Columnas de la hoja")
 
 
 # Preparar los datos de cada hoja
@@ -530,7 +565,7 @@ if seccion == "Resumen":
             fig = grafico_dona(conteo, [COLORES_EVIDENCIA[e] for e in conteo.index])
             st.pyplot(fig)
             plt.close(fig)
-            st.write(tabla_porcentaje(evaluacion["Estado"]))
+            mostrar_tabla(tabla_porcentaje(evaluacion["Estado"]), mostrar_indice=True)
         else:
             st.write("No hay puntos con esos filtros.")
 
@@ -547,7 +582,7 @@ if seccion == "Resumen":
         ax.tick_params(labelsize=8)
         st.pyplot(fig)
         plt.close(fig)
-        st.write(por_resultado)
+        mostrar_tabla(por_resultado, mostrar_indice=True)
         st.caption(f"Promedio: {metricas['Cumplimiento %'].mean():.1f}% · "
                    f"{len(PRINCIPIOS_ISO) - len(principios_sin_datos)} de {len(PRINCIPIOS_ISO)} principios con datos.")
 
@@ -600,7 +635,7 @@ elif seccion == "ISO 38500":
             fig = grafico_dona(conteo, [COLORES_ESTADO[e] for e in conteo.index])
             st.pyplot(fig)
             plt.close(fig)
-            st.write(tabla_porcentaje(datos["Estado"]))
+            mostrar_tabla(tabla_porcentaje(datos["Estado"]), mostrar_indice=True)
 
         # Cajas con el número de métricas por tarea del modelo (sección 6.2)
         st.markdown("**Métricas por tarea del modelo de gobierno**")
@@ -612,8 +647,7 @@ elif seccion == "ISO 38500":
         # Mostrar los datos filtrados
         with st.container(border=True):
             st.markdown("**Métricas por principio**")
-            st.dataframe(datos[["Principio", "Métrica", "Actual", "Meta", "Cumplimiento %", "Estado"]].round(1),
-                         hide_index=True)
+            mostrar_tabla(datos[["Principio", "Métrica", "Actual", "Meta", "Cumplimiento %", "Estado"]].round(1))
 
     # Evaluación según los puntos de la sección 4.1 de la norma
     if evaluacion_iso is not None:
@@ -637,7 +671,7 @@ elif seccion == "ISO 38500":
                                "Origen", "Presupuesto"]]
         with st.container(border=True):
             st.markdown("**Brechas y plan de acción**")
-            st.dataframe(hoja_plan, hide_index=True)
+            mostrar_tabla(hoja_plan)
     elif principios_sin_datos:
         BRECHAS = {
             NOMBRES_ISO["Datos y decisiones"]: ("El banco no mide si sus datos son confiables ni cómo se usan para decidir",
@@ -658,8 +692,8 @@ elif seccion == "ISO 38500":
             st.markdown("**Brechas y plan de acción**")
             plan = pd.DataFrame(filas_plan, columns=["Principio", NOMBRES_ISO["Evaluar"], NOMBRES_ISO["Dirigir"],
                                                      "Origen", "Presupuesto", NOMBRES_ISO["Monitorear"]])
-            st.dataframe(plan[["Principio", NOMBRES_ISO["Evaluar"], NOMBRES_ISO["Dirigir"], NOMBRES_ISO["Monitorear"],
-                               "Origen", "Presupuesto"]], hide_index=True)
+            mostrar_tabla(plan[["Principio", NOMBRES_ISO["Evaluar"], NOMBRES_ISO["Dirigir"], NOMBRES_ISO["Monitorear"],
+                               "Origen", "Presupuesto"]])
 
 
 # ---------------------------------------------------------------- Gobierno de Datos
@@ -694,22 +728,22 @@ elif seccion == "Gobierno de Datos":
             fig = grafico_dona(conteo, [COLORES_NIVEL[n] for n in conteo.index])
             st.pyplot(fig)
             plt.close(fig)
-            st.write(tabla_porcentaje(riesgos_info["IMPACTO"]))
+            mostrar_tabla(tabla_porcentaje(riesgos_info["IMPACTO"]), mostrar_indice=True)
 
     # Mostrar los datos
     with st.container(border=True):
-        st.write("Iniciativas de datos:", iniciativas_datos)
+        mostrar_tabla(iniciativas_datos, "Iniciativas de datos")
     with st.container(border=True):
-        st.write("Riesgos de información:", riesgos_info)
+        mostrar_tabla(riesgos_info, "Riesgos de información")
 
     # Contexto estratégico relacionado con los datos
     with st.container(border=True):
         st.markdown("**Contexto estratégico**")
         objetivos = hoja("Objetivos estrategicos")
-        st.write(objetivos[objetivos.astype(str).apply(
+        mostrar_tabla(objetivos[objetivos.astype(str).apply(
             lambda fila: fila.str.contains("Información|Analítica", case=False).any(), axis=1)])
         dofa = hoja("Dofa")
-        st.write(dofa[dofa["Descripción"].astype(str).str.contains("Dato|Data", case=False)])
+        mostrar_tabla(dofa[dofa["Descripción"].astype(str).str.contains("Dato|Data", case=False)])
 
     # Puntos de la ISO/IEC 38500:2024 relacionados con los datos
     if evaluacion_iso is not None:
@@ -725,7 +759,7 @@ elif seccion == "Gobierno de Datos":
             col2.metric("Con responsable", f"{(gobierno_datos['Responsable asignado'] == 'Sí').mean():.0%}", border=True)
             col3.metric("Catalogados", f"{(gobierno_datos['Catalogado'] == 'Sí').mean():.0%}", border=True)
             st.bar_chart(gobierno_datos.groupby(["Dominio", "Clasificación"]).size().unstack(fill_value=0))
-            st.write(gobierno_datos)
+            mostrar_tabla(gobierno_datos)
 
 
 # ---------------------------------------------------------------- Gobierno de IA
@@ -769,7 +803,7 @@ elif seccion == "Gobierno de IA":
 
     # Mostrar los datos
     with st.container(border=True):
-        st.write("Iniciativas de IA y automatización:", iniciativas_ia)
+        mostrar_tabla(iniciativas_ia, "Iniciativas de IA y automatización")
 
     # Puntos de la ISO/IEC 38500:2024 relacionados con decisiones automatizadas (IA)
     if evaluacion_iso is not None:
@@ -784,7 +818,7 @@ elif seccion == "Gobierno de IA":
             col1.metric("Casos de uso", len(gobierno_ia), border=True)
             col2.metric("Con evaluación ética", f"{(gobierno_ia['Evaluación ética'] == 'Sí').mean():.0%}", border=True)
             col3.metric("Monitoreados", f"{(gobierno_ia['Monitoreado'] == 'Sí').mean():.0%}", border=True)
-            st.write(gobierno_ia)
+            mostrar_tabla(gobierno_ia)
 
 
 # ---------------------------------------------------------------- Operación TI
@@ -804,7 +838,7 @@ elif seccion == "Operación TI":
     with col1.container(border=True):
         # Gráfico de barras: indicadores de operación, actual frente a meta
         st.markdown("**Indicadores de operación: actual vs. meta**")
-        st.bar_chart(operacion_bsc.set_index("Indicador")[["Actual", "Meta"]], stack=False, horizontal=True)
+        barras_horizontales(operacion_bsc.set_index("Indicador")[["Actual", "Meta"]], ["#1f77b4", "#aec7e8"], apiladas=False)
     with col2.container(border=True):
         # Gráfico de dona: servidores por ambiente
         st.markdown("**Servidores por ambiente**")
@@ -812,19 +846,18 @@ elif seccion == "Operación TI":
         fig = grafico_dona(ambiente, ["#2ca02c", "#ff7f0e"])
         st.pyplot(fig)
         plt.close(fig)
-        st.write(ambiente.rename("Cantidad").to_frame())
+        mostrar_tabla(ambiente.rename("Cantidad").to_frame(), mostrar_indice=True)
 
     # Mostrar los indicadores del dominio TI con su fórmula y meta
     with st.container(border=True):
-        st.write("Indicadores del dominio TI (fórmula y meta):",
-                 hoja("Indicadores Dominio TI").dropna(subset=["INDICADOR"]).astype(str))
+        mostrar_tabla(hoja("Indicadores Dominio TI").dropna(subset=["INDICADOR"]).astype(str), "Indicadores del dominio TI (fórmula y meta)")
 
     # Solicitudes de la mesa de servicio (si la hoja tiene datos)
     if len(operacion):
         with st.container(border=True):
             st.markdown("**Solicitudes de la mesa de servicio por mes**")
             st.line_chart(operacion.groupby(["Mes", "Tipo"])["Cantidad"].sum().unstack())
-            st.write(operacion.head(12))
+            mostrar_tabla(operacion.head(12))
 
 
 # ---------------------------------------------------------------- Balanced Scorecard
@@ -850,8 +883,7 @@ elif seccion == "BSC":
 
     # Mostrar los datos filtrados
     with st.container(border=True):
-        st.write(f"Indicadores de la perspectiva {perspectiva}:",
-                 datos[["Perspectiva", "Indicador", "Actual", "Meta", "Cumplimiento %"]].round(1))
+        mostrar_tabla(datos[["Perspectiva", "Indicador", "Actual", "Meta", "Cumplimiento %"]].round(1), f"Indicadores de la perspectiva {perspectiva}")
 
 
 # ---------------------------------------------------------------- Portafolio
@@ -873,7 +905,7 @@ elif seccion == "Portafolio":
     with col1.container(border=True):
         # Gráfico de barras: iniciativas por dominio
         st.markdown("**Iniciativas por dominio**")
-        st.bar_chart(datos["Dominio"].value_counts(), horizontal=True)
+        barras_horizontales(datos["Dominio"].value_counts().sort_values(), ["#4c72b0"])
     with col2.container(border=True):
         # Gráfico de dona con el estado de los proyectos PMO
         st.markdown("**Estado de los proyectos PMO**")
@@ -881,7 +913,7 @@ elif seccion == "Portafolio":
         fig = grafico_dona(conteo, ["#4c72b0", "#c7c7c7"])
         st.pyplot(fig)
         plt.close(fig)
-        st.write(tabla_porcentaje(pmo["Estado"]))
+        mostrar_tabla(tabla_porcentaje(pmo["Estado"]), mostrar_indice=True)
 
     with st.container(border=True):
         # Gráfico de barras: retraso de cada proyecto frente a su línea base
@@ -895,7 +927,7 @@ elif seccion == "Portafolio":
 
     # Mostrar los datos filtrados
     with st.container(border=True):
-        st.write("Detalle del portafolio:", datos)
+        mostrar_tabla(datos, "Detalle del portafolio")
 
 
 # ---------------------------------------------------------------- Innovación
@@ -939,7 +971,7 @@ elif seccion == "Innovación":
 
     # Mostrar los datos filtrados
     with st.container(border=True):
-        st.write("Rupturas estratégicas:", datos[["Iniciativa", "RUPTURA"]])
+        mostrar_tabla(datos[["Iniciativa", "RUPTURA"]], "Rupturas estratégicas")
 
 
 # ---------------------------------------------------------------- Riesgos
@@ -970,7 +1002,7 @@ elif seccion == "Riesgos":
         por_frente = datos.groupby(["FRENTE", "IMPACTO"]).size().unstack(fill_value=0)
         por_frente = por_frente.reindex(columns=[c for c in COLORES_NIVEL if c in por_frente.columns])
         if len(por_frente):
-            st.bar_chart(por_frente, horizontal=True, color=[COLORES_NIVEL[c] for c in por_frente.columns])
+            barras_horizontales(por_frente, [COLORES_NIVEL[c] for c in por_frente.columns])
     with col2.container(border=True):
         # Gráfico de dona con la distribución por impacto
         st.markdown("**Distribución por impacto**")
@@ -979,11 +1011,11 @@ elif seccion == "Riesgos":
             fig = grafico_dona(conteo, [COLORES_NIVEL[n] for n in conteo.index])
             st.pyplot(fig)
             plt.close(fig)
-            st.write(tabla_porcentaje(datos["IMPACTO"]))
+            mostrar_tabla(tabla_porcentaje(datos["IMPACTO"]), mostrar_indice=True)
 
     # Mostrar los datos filtrados
     with st.container(border=True):
-        st.write("Matriz de riesgos:", datos)
+        mostrar_tabla(datos, "Matriz de riesgos")
 
 
 # ---------------------------------------------------------------- Arquitectura
@@ -1016,12 +1048,12 @@ elif seccion == "Arquitectura":
         # Gráfico de barras: iniciativas por dominio estratégico
         st.markdown("**Iniciativas por dominio estratégico**")
         clasificadas = maestra[maestra["Dominio"] != "Por Clasificar"]
-        st.bar_chart(clasificadas["Dominio"].value_counts(), horizontal=True)
+        barras_horizontales(clasificadas["Dominio"].value_counts().sort_values(), ["#55a868"])
 
     with st.container(border=True):
         # Gráfico de barras: capacidades tecnológicas
         st.markdown("**Capacidades tecnológicas**")
-        st.bar_chart(arquitectura.set_index("Métrica")["Valor"], horizontal=True)
+        barras_horizontales(arquitectura.set_index("Métrica")["Valor"].sort_values(), ["#4c72b0"])
 
 
 # ---------------------------------------------------------------- Contexto
@@ -1040,8 +1072,8 @@ elif seccion == "Contexto":
 
     col1, col2 = st.columns([1, 2])
     with col1.container(border=True):
-        st.write("Fuerzas de Porter:", hoja("Porter"))
+        mostrar_tabla(hoja("Porter"), "Fuerzas de Porter")
     with col2.container(border=True):
-        st.write("Indicadores del dominio TI:", hoja("Indicadores Dominio TI").dropna(subset=["INDICADOR"]).astype(str))
+        mostrar_tabla(hoja("Indicadores Dominio TI").dropna(subset=["INDICADOR"]).astype(str), "Indicadores del dominio TI")
 
 
