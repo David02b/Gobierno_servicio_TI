@@ -6,5 +6,6 @@ site:
       key: iso38500
       title: Dashboard ISO/IEC 38500:2024
       path: iso38500
+      default: true
       content:
         directory: ./docs
