@@ -1,0 +1,10 @@
+$schema: https://api.gitbook.com/gitbook-docs.yaml
+site:
+  title: Documentación Gobierno de TI
+  structure:
+    - type: space
+      key: iso38500
+      title: Dashboard ISO/IEC 38500:2024
+      path: iso38500
+      content:
+        directory: ./docs
