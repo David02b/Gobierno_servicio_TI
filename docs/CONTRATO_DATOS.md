@@ -345,4 +345,6 @@ sección correspondiente se muestra vacía o como pendiente; no se inventan dato
 2. Si es inevitable renombrar, actualizar el código y este documento en el mismo commit.
 3. Mantener los encabezados en la fila 1 (excepto `Presupuesto proyect`).
 4. Probar con la hoja llena, vacía y con valores nulos.
-5. Actualizar el [CHANGELOG](../CHANGELOG.md) si el cambio afecta la versión.
+5. Actualizar el
+   [CHANGELOG](https://github.com/MonicaGalvis27/Gobierno_servicios_TI/blob/main/CHANGELOG.md)
+   si el cambio afecta la versión.

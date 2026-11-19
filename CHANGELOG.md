@@ -14,6 +14,8 @@ y el versionado sigue [SemVer](https://semver.org/lang/es/).
   referencia del código, contrato de datos y validación/versionado.
 - `__version__` y docstrings en `dashboard_ISO38500/app.py`.
 - Versión visible en la barra lateral del dashboard.
+- Configuración para publicar esta documentación en GitBook
+  (`.gitbook.yaml` y `docs/SUMMARY.md`).
 
 ### Corregido
 

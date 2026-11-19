@@ -12,7 +12,7 @@ Los demás proyectos del repositorio no forman parte de esta documentación.
 | [Referencia del código](REFERENCIA_CODIGO.md) | Constantes, funciones, preparación de datos, secciones y puntos de extensión |
 | [Contrato de datos](CONTRATO_DATOS.md) | Hojas, columnas, vocabularios y reglas de calidad que espera el código |
 | [Validación y versionado](VALIDACION_VERSIONADO.md) | Revisión de cambios, hallazgos, SemVer, etiquetas y lista de publicación |
-| [Historial de cambios](../CHANGELOG.md) | Versiones y cambios del dashboard ISO 38500 |
+| [Historial de cambios](https://github.com/MonicaGalvis27/Gobierno_servicios_TI/blob/main/CHANGELOG.md) | Versiones y cambios del dashboard ISO 38500 |
 
 ## Descripción del dashboard
 
@@ -32,7 +32,8 @@ Tecnologías: Python, Streamlit, Pandas, Matplotlib y Seaborn.
 
 ## Versión documentada
 
-- Versión del dashboard: **1.0.0** (ver [CHANGELOG](../CHANGELOG.md)).
+- Versión del dashboard: **1.0.0** (ver
+  [CHANGELOG](https://github.com/MonicaGalvis27/Gobierno_servicios_TI/blob/main/CHANGELOG.md)).
 - Fecha de esta revisión: **2026-11-18**.
 - Último commit de código revisado: `b0efb96` — *Ajuste del tamaño de tablas y
   gráficos al contenido*.
