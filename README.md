@@ -19,7 +19,7 @@ La documentación de este repositorio cubre **únicamente** el dashboard
 | [docs/FLUJO_AUTOMATIZADO.md](docs/FLUJO_AUTOMATIZADO.md) | Arquitectura, origen de datos, caché, respaldo y operación |
 | [docs/REFERENCIA_CODIGO.md](docs/REFERENCIA_CODIGO.md) | Constantes, funciones, preparación de datos y puntos de extensión |
 | [docs/CONTRATO_DATOS.md](docs/CONTRATO_DATOS.md) | Hojas, columnas y reglas de calidad del Excel |
-| [docs/AUTOMATIZACION_N8N.md](docs/AUTOMATIZACION_N8N.md) | Flujo de evaluación de madurez en n8n, entrada, cálculo y salida |
+| [docs/EVALUACION_DE_MADUREZ.md](docs/EVALUACION_DE_MADUREZ.md) | Flujo de evaluación de madurez en n8n, entrada, cálculo y salida |
 | [docs/VALIDACION_VERSIONADO.md](docs/VALIDACION_VERSIONADO.md) | Validación de cambios, SemVer, etiquetas y publicación |
 | [CHANGELOG.md](CHANGELOG.md) | Historial de versiones del dashboard ISO 38500 |
 

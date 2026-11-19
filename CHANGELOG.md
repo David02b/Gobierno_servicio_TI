@@ -17,7 +17,7 @@ y el versionado sigue [SemVer](https://semver.org/lang/es/).
 - Configuración para publicar esta documentación en GitBook
   (`.gitbook.yaml` y `docs/SUMMARY.md`).
 - Documentación de la automatización de evaluación de madurez en n8n
-  (`docs/AUTOMATIZACION_N8N.md`) y copia versionada del flujo en
+  (`docs/EVALUACION_DE_MADUREZ.md`) y copia versionada del flujo en
   `n8n/flujo-gobierno-ti-iso38500.json`.
 
 ### Corregido

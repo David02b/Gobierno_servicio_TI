@@ -1,4 +1,4 @@
-# Automatización n8n — Evaluación de madurez ISO/IEC 38500:2024
+# Evaluación de madurez — ISO/IEC 38500:2024
 
 ## 1. Qué es
 
@@ -9,7 +9,7 @@ para cada principio.
 
 Es complementario al dashboard, no forma parte de él:
 
-| Aspecto | Dashboard `dashboard_ISO38500` | Automatización n8n |
+| Aspecto | Dashboard `dashboard_ISO38500` | Evaluación de madurez |
 |---|---|---|
 | Entrada | `Extraido_CIO_Completo.xlsx` (Google Drive o copia local) | Excel de assessment subido por formulario |
 | Proceso | Limpieza, cálculo de KPIs y renderizado en Streamlit | Agrupación por principio, puntaje y nivel de madurez |
@@ -67,11 +67,11 @@ formulario no devolvía el archivo al usuario.
 | Título | Evaluación de madurez de Gobierno de TI |
 | Campo | `archivo` (un solo archivo, obligatorio) |
 | Tipos aceptados | `.xlsx` |
-| URL de producción | `https://TU-INSTANCIA/form/gobierno-ti-iso38500` |
-| URL de prueba | `https://TU-INSTANCIA/form-test/gobierno-ti-iso38500` |
 
-La URL de prueba solo escucha después de pulsar **Execute workflow** y acepta un
-envío; para uso real se usa la URL de producción con el workflow activo.
+Las URLs de prueba y producción no se documentan porque dependen de la
+instancia donde se importe el flujo. n8n las genera a partir de la ruta
+`gobierno-ti-iso38500` y las muestra en el nodo **Cargar Excel** después de
+importar el `.json`.
 
 ### 4.2 Libro de Excel
 
@@ -179,7 +179,7 @@ independiente.
    **Workflows → Add workflow → ⋯ → Import from File**.
 2. Guardar y revisar el nodo **Cargar Excel**.
 3. Activar o publicar el workflow.
-4. Copiar la **Production URL** del nodo y abrirla.
+4. Copiar la URL de producción que muestra el nodo y abrirla.
 5. Subir el Excel, enviar y descargar el resultado.
 
 El flujo no requiere credenciales: todos los nodos son core de n8n. Se necesita

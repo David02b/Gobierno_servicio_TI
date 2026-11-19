@@ -346,5 +346,5 @@ sección correspondiente se muestra vacía o como pendiente; no se inventan dato
 3. Mantener los encabezados en la fila 1 (excepto `Presupuesto proyect`).
 4. Probar con la hoja llena, vacía y con valores nulos.
 5. Actualizar el
-   [CHANGELOG](https://github.com/MonicaGalvis27/Gobierno_servicios_TI/blob/main/CHANGELOG.md)
+   [CHANGELOG](https://github.com/David02b/Gobierno_servicio_TI/blob/main/CHANGELOG.md)
    si el cambio afecta la versión.

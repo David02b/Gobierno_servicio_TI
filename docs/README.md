@@ -12,7 +12,7 @@ Los demás proyectos del repositorio no forman parte de esta documentación.
 | [Flujo automatizado](FLUJO_AUTOMATIZADO.md) | Arquitectura, origen de datos, caché, respaldo, despliegue y operación |
 | [Referencia del código](REFERENCIA_CODIGO.md) | Constantes, funciones, preparación de datos, secciones y puntos de extensión |
 | [Contrato de datos](CONTRATO_DATOS.md) | Hojas, columnas, vocabularios y reglas de calidad que espera el código |
-| [Automatización n8n](AUTOMATIZACION_N8N.md) | Formulario, cálculo de madurez, salida y puesta en marcha del flujo ISO 38500 |
+| [Evaluación de madurez](EVALUACION_DE_MADUREZ.md) | Formulario, cálculo de madurez, salida y puesta en marcha del flujo ISO 38500 |
 | [Validación y versionado](VALIDACION_VERSIONADO.md) | Revisión de cambios, hallazgos, SemVer, etiquetas y lista de publicación |
 | [Historial de cambios](https://github.com/David02b/Gobierno_servicio_TI/blob/main/CHANGELOG.md) | Versiones y cambios del dashboard ISO 38500 |
 
