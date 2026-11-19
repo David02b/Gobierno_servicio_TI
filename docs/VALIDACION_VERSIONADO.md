@@ -100,6 +100,7 @@ Conteos verificados:
 | El README de `dashboard_ISO38500` listaba "Calidad de datos", pero esa sección no existe en la app | Corregido: se reemplazó por la lista real de secciones |
 | El README no explicaba el origen de datos, el respaldo ni el contrato del Excel | Se agregó enlace a esta documentación |
 | No existía un documento de arquitectura ni de contrato de datos | Creados en `docs/` |
+| No existía documentación de la automatización de madurez en n8n | Creada en `docs/AUTOMATIZACION_N8N.md` |
 | No existía `CHANGELOG.md` | Creado con el historial del dashboard ISO |
 
 ## 4. Hallazgos y recomendaciones

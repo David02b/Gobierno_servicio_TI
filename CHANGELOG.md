@@ -1,7 +1,7 @@
 # Changelog — Dashboard ISO/IEC 38500:2024
 
-Todos los cambios relevantes de `dashboard_ISO38500` se documentan en este
-archivo.
+Todos los cambios relevantes de `dashboard_ISO38500` y de su automatización de
+evaluación de madurez en n8n se documentan en este archivo.
 
 El formato sigue [Keep a Changelog](https://keepachangelog.com/es-ES/1.1.0/)
 y el versionado sigue [SemVer](https://semver.org/lang/es/).
@@ -16,6 +16,9 @@ y el versionado sigue [SemVer](https://semver.org/lang/es/).
 - Versión visible en la barra lateral del dashboard.
 - Configuración para publicar esta documentación en GitBook
   (`.gitbook.yaml` y `docs/SUMMARY.md`).
+- Documentación de la automatización de evaluación de madurez en n8n
+  (`docs/AUTOMATIZACION_N8N.md`) y copia versionada del flujo en
+  `n8n/flujo-gobierno-ti-iso38500.json`.
 
 ### Corregido
 
@@ -76,5 +79,5 @@ local.
 - `gatherUsageStats = false` para no enviar estadísticas de uso a Streamlit.
 - La aplicación es de solo lectura: no escribe en Google Drive ni en el Excel.
 
-[Unreleased]: https://github.com/MonicaGalvis27/Gobierno_servicios_TI/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/MonicaGalvis27/Gobierno_servicios_TI/releases/tag/v1.0.0
+[Unreleased]: https://github.com/David02b/Gobierno_servicio_TI/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/David02b/Gobierno_servicio_TI/releases/tag/v1.0.0

@@ -1,8 +1,9 @@
 # Documentación — Dashboard ISO/IEC 38500:2024
 
-Documentación técnica del proyecto **`dashboard_ISO38500`**. El alcance de esta
-documentación es únicamente ese dashboard: su flujo automatizado, su código, el
-contrato del Excel que consume y el proceso de versionado.
+Documentación técnica del proyecto **`dashboard_ISO38500`** y de su automatización
+complementaria de evaluación de madurez en **n8n**. El alcance de esta
+documentación es únicamente ese dashboard y esa automatización: su flujo, su
+código, el contrato de los Excel que consumen y el proceso de versionado.
 
 Los demás proyectos del repositorio no forman parte de esta documentación.
 
@@ -11,8 +12,9 @@ Los demás proyectos del repositorio no forman parte de esta documentación.
 | [Flujo automatizado](FLUJO_AUTOMATIZADO.md) | Arquitectura, origen de datos, caché, respaldo, despliegue y operación |
 | [Referencia del código](REFERENCIA_CODIGO.md) | Constantes, funciones, preparación de datos, secciones y puntos de extensión |
 | [Contrato de datos](CONTRATO_DATOS.md) | Hojas, columnas, vocabularios y reglas de calidad que espera el código |
+| [Automatización n8n](AUTOMATIZACION_N8N.md) | Formulario, cálculo de madurez, salida y puesta en marcha del flujo ISO 38500 |
 | [Validación y versionado](VALIDACION_VERSIONADO.md) | Revisión de cambios, hallazgos, SemVer, etiquetas y lista de publicación |
-| [Historial de cambios](https://github.com/MonicaGalvis27/Gobierno_servicios_TI/blob/main/CHANGELOG.md) | Versiones y cambios del dashboard ISO 38500 |
+| [Historial de cambios](https://github.com/David02b/Gobierno_servicio_TI/blob/main/CHANGELOG.md) | Versiones y cambios del dashboard ISO 38500 |
 
 ## Descripción del dashboard
 
@@ -33,7 +35,7 @@ Tecnologías: Python, Streamlit, Pandas, Matplotlib y Seaborn.
 ## Versión documentada
 
 - Versión del dashboard: **1.0.0** (ver
-  [CHANGELOG](https://github.com/MonicaGalvis27/Gobierno_servicios_TI/blob/main/CHANGELOG.md)).
+  [CHANGELOG](https://github.com/David02b/Gobierno_servicio_TI/blob/main/CHANGELOG.md)).
 - Fecha de esta revisión: **2026-11-18**.
 - Último commit de código revisado: `b0efb96` — *Ajuste del tamaño de tablas y
   gráficos al contenido*.

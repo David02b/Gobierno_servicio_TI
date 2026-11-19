@@ -10,8 +10,8 @@ Repositorio de proyectos de gobierno y servicios de TI.
 ## Documentación
 
 La documentación de este repositorio cubre **únicamente** el dashboard
-`dashboard_ISO38500` (versión documentada: **1.0.0**, ver
-[CHANGELOG](CHANGELOG.md)).
+`dashboard_ISO38500` y su automatización de evaluación de madurez en n8n
+(versión documentada: **1.0.0**, ver [CHANGELOG](CHANGELOG.md)).
 
 | Documento | Contenido |
 |---|---|
@@ -19,6 +19,7 @@ La documentación de este repositorio cubre **únicamente** el dashboard
 | [docs/FLUJO_AUTOMATIZADO.md](docs/FLUJO_AUTOMATIZADO.md) | Arquitectura, origen de datos, caché, respaldo y operación |
 | [docs/REFERENCIA_CODIGO.md](docs/REFERENCIA_CODIGO.md) | Constantes, funciones, preparación de datos y puntos de extensión |
 | [docs/CONTRATO_DATOS.md](docs/CONTRATO_DATOS.md) | Hojas, columnas y reglas de calidad del Excel |
+| [docs/AUTOMATIZACION_N8N.md](docs/AUTOMATIZACION_N8N.md) | Flujo de evaluación de madurez en n8n, entrada, cálculo y salida |
 | [docs/VALIDACION_VERSIONADO.md](docs/VALIDACION_VERSIONADO.md) | Validación de cambios, SemVer, etiquetas y publicación |
 | [CHANGELOG.md](CHANGELOG.md) | Historial de versiones del dashboard ISO 38500 |
 
