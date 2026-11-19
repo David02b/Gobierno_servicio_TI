@@ -19,14 +19,46 @@ COLORES_NIVEL = {"Alto": "#d62728", "Medio": "#ff7f0e", "Bajo": "#2ca02c"}
 COLORES_EVIDENCIA = {"Con evidencia": "#2ca02c", "Evidencia parcial": "#ff7f0e", "Sin evidencia": "#d62728"}
 
 # ISO/IEC 38500:2024 - modelo de gobierno (6.2) y resultados del buen gobierno de TI (4.1)
-TAREAS_MODELO = ["Involucrar", "Evaluar", "Dirigir", "Monitorear"]
-RESULTADOS_ISO = ["Desempeño efectivo", "Administración responsable", "Comportamiento ético"]
-PRINCIPIOS_ISO = {  # Sección 5 de la norma
+# Nombres de la ISO/IEC 38500:2024 (español y nombre original del documento)
+NOMBRES_ISO = {
+    # Principios (sección 5)
+    "Propósito": "Propósito (Purpose)",
+    "Generación de valor": "Generación de valor (Value generation)",
+    "Estrategia": "Estrategia (Strategy)",
+    "Supervisión": "Supervisión (Oversight)",
+    "Rendición de cuentas": "Rendición de cuentas (Accountability)",
+    "Involucramiento de partes interesadas": "Involucramiento de partes interesadas (Stakeholder engagement)",
+    "Liderazgo": "Liderazgo (Leadership)",
+    "Datos y decisiones": "Datos y decisiones (Data and decisions)",
+    "Gobierno del riesgo": "Gobierno del riesgo (Risk governance)",
+    "Responsabilidad social": "Responsabilidad social (Social responsibility)",
+    "Viabilidad y desempeño en el tiempo": "Viabilidad y desempeño en el tiempo (Viability and performance over time)",
+    # Resultados del buen gobierno de TI (sección 4.1)
+    "Desempeño efectivo": "Desempeño efectivo (Effective performance)",
+    "Administración responsable": "Administración responsable (Responsible stewardship)",
+    "Comportamiento ético": "Comportamiento ético (Ethical behaviour)",
+    # Modelo de gobierno de TI (sección 6.2)
+    "Involucrar": "Involucrar (Engage stakeholders)",
+    "Evaluar": "Evaluar (Evaluate)",
+    "Dirigir": "Dirigir (Direct)",
+    "Monitorear": "Monitorear (Monitor)",
+}
+TAREAS_MODELO_ES = ["Involucrar", "Evaluar", "Dirigir", "Monitorear"]
+RESULTADOS_ISO_ES = ["Desempeño efectivo", "Administración responsable", "Comportamiento ético"]
+PRINCIPIOS_ISO_ES = {
     "Propósito": "5.2", "Generación de valor": "5.3", "Estrategia": "5.4", "Supervisión": "5.5",
     "Rendición de cuentas": "5.6", "Involucramiento de partes interesadas": "5.7", "Liderazgo": "5.8",
     "Datos y decisiones": "5.9", "Gobierno del riesgo": "5.10", "Responsabilidad social": "5.11",
     "Viabilidad y desempeño en el tiempo": "5.12",
 }
+TAREAS_MODELO = [NOMBRES_ISO[t] for t in TAREAS_MODELO_ES]
+RESULTADOS_ISO = [NOMBRES_ISO[r] for r in RESULTADOS_ISO_ES]
+PRINCIPIOS_ISO = {NOMBRES_ISO[p]: sec for p, sec in PRINCIPIOS_ISO_ES.items()}
+
+
+def nombre_iso(serie):
+    # Pasa los nombres en español al nombre de la norma (si ya lo tienen, los deja igual)
+    return serie.map(lambda v: NOMBRES_ISO.get(str(v).strip(), v) if pd.notna(v) else v)
 
 # Columnas de las hojas que el banco debe llenar
 COLUMNAS_DATOS = ["Dominio", "Activo de datos", "Clasificación", "Responsable asignado", "Catalogado",
@@ -258,7 +290,7 @@ iniciativas_ia = iniciativas_por_tema(CLAVES_IA)
 def agregar_metrica(principio, tarea, resultado, metrica, fuente, base, actual, meta, origen_meta, menor_es_mejor=False):
     if actual is None or pd.isna(actual):
         return
-    metricas_iso.append({"Principio": principio, "Sección": PRINCIPIOS_ISO[principio], "Tarea del modelo": tarea,
+    metricas_iso.append({"Principio": principio, "Sección": PRINCIPIOS_ISO_ES[principio], "Tarea del modelo": tarea,
                          "Resultado": resultado, "Métrica": metrica, "Fuente": fuente, "Base en la norma": base,
                          "Actual": round(float(actual), 1), "Meta": meta, "Origen de la meta": origen_meta,
                          "Cumplimiento %": cumplimiento(actual, meta, menor_es_mejor)})
@@ -287,7 +319,7 @@ def porcentaje_si(df, columna):
     return float((df[columna].astype(str).str.strip() == "Sí").mean() * 100)
 
 
-DE, AR, CE = RESULTADOS_ISO
+DE, AR, CE = RESULTADOS_ISO_ES
 TODOS = "100% (todos los registros)"
 metricas_iso = []
 agregar_metrica("Propósito", "Dirigir", DE, "Proyectos PMO asociados a una MEGA", "Hoja Detalle iniciativa pmo",
@@ -327,6 +359,8 @@ agregar_bsc("Viabilidad y desempeño en el tiempo", "Monitorear", DE, "Calidad P
 agregar_bsc("Viabilidad y desempeño en el tiempo", "Evaluar", DE, "Migración Integraciones", "4.1.2 Agilidad y adaptación")
 agregar_bsc("Viabilidad y desempeño en el tiempo", "Monitorear", DE, "CSI", "4.1.2 Agilidad y adaptación (mejora continua)")
 iso = pd.DataFrame(metricas_iso)
+for columna in ["Principio", "Resultado", "Tarea del modelo"]:
+    iso[columna] = nombre_iso(iso[columna])
 iso["Estado"] = iso["Cumplimiento %"].apply(estado)
 principios_sin_datos = [p for p in PRINCIPIOS_ISO if p not in set(iso["Principio"])]
 
@@ -347,6 +381,9 @@ if hoja_iso is not None and {"Principio", "Actual", "Meta", "Menor es mejor"} <=
     hoja_iso["Actual"] = numero(hoja_iso["Actual"])
     hoja_iso["Meta"] = numero(hoja_iso["Meta"])
     iso = hoja_iso.dropna(subset=["Actual", "Meta"]).copy()
+    for columna in ["Principio", "Resultado", "Tarea del modelo"]:
+        if columna in iso.columns:
+            iso[columna] = nombre_iso(iso[columna])
     iso["Cumplimiento %"] = [cumplimiento(a, m, str(menor).strip() == "Sí")
                              for a, m, menor in zip(iso["Actual"], iso["Meta"], iso["Menor es mejor"])]
     iso["Estado"] = iso["Cumplimiento %"].apply(estado)
@@ -371,6 +408,7 @@ else:
 evaluacion_iso = hoja_si_existe("ISO 38500 Evaluacion")
 if evaluacion_iso is not None:
     evaluacion_iso = evaluacion_iso.rename(columns={"Traducción": "Punto", "Evidencia en el banco": "Evidencia"})
+    evaluacion_iso["Resultado"] = nombre_iso(evaluacion_iso["Resultado"])
 
 hoja_ia = hoja_si_existe("Gobierno IA")
 if hoja_ia is not None and "Hoja de origen" in hoja_ia.columns:
@@ -588,16 +626,23 @@ elif seccion == "ISO 38500":
 
     # Brechas y plan de acción (hoja "Plan de accion" del Excel)
     hoja_plan = hoja_si_existe("Plan de accion")
-    if hoja_plan is not None and "Acción en el portafolio" in hoja_plan.columns:
+    if hoja_plan is not None:
+        hoja_plan = hoja_plan.rename(columns={"Brecha": NOMBRES_ISO["Evaluar"],
+                                              "Acción en el portafolio": NOMBRES_ISO["Dirigir"],
+                                              "Estado": NOMBRES_ISO["Monitorear"]})
+    if hoja_plan is not None and NOMBRES_ISO["Dirigir"] in hoja_plan.columns:
+        hoja_plan["Principio"] = nombre_iso(hoja_plan["Principio"])
         hoja_plan["Presupuesto"] = numero(hoja_plan["Presupuesto"]).apply(lambda v: millones(v) if pd.notna(v) else "")
+        hoja_plan = hoja_plan[["Principio", NOMBRES_ISO["Evaluar"], NOMBRES_ISO["Dirigir"], NOMBRES_ISO["Monitorear"],
+                               "Origen", "Presupuesto"]]
         with st.container(border=True):
             st.markdown("**Brechas y plan de acción**")
             st.dataframe(hoja_plan, hide_index=True)
     elif principios_sin_datos:
         BRECHAS = {
-            "Datos y decisiones": ("No hay indicadores de calidad ni de uso de los datos",
+            NOMBRES_ISO["Datos y decisiones"]: ("El banco no mide si sus datos son confiables ni cómo se usan para decidir",
                                    ["gobernanza del dato", "Analytics"]),
-            "Gobierno del riesgo": ("La matriz de riesgos no tiene tratamiento ni seguimiento",
+            NOMBRES_ISO["Gobierno del riesgo"]: ("Los riesgos identificados no tienen tratamiento ni seguimiento",
                                     ["SIAR"]),
         }
         filas_plan = []
@@ -611,8 +656,10 @@ elif seccion == "ISO 38500":
                                        f["Estado"]])
         with st.container(border=True):
             st.markdown("**Brechas y plan de acción**")
-            st.dataframe(pd.DataFrame(filas_plan, columns=["Principio", "Brecha", "Acción en el portafolio",
-                                                           "Origen", "Presupuesto", "Estado"]), hide_index=True)
+            plan = pd.DataFrame(filas_plan, columns=["Principio", NOMBRES_ISO["Evaluar"], NOMBRES_ISO["Dirigir"],
+                                                     "Origen", "Presupuesto", NOMBRES_ISO["Monitorear"]])
+            st.dataframe(plan[["Principio", NOMBRES_ISO["Evaluar"], NOMBRES_ISO["Dirigir"], NOMBRES_ISO["Monitorear"],
+                               "Origen", "Presupuesto"]], hide_index=True)
 
 
 # ---------------------------------------------------------------- Gobierno de Datos
