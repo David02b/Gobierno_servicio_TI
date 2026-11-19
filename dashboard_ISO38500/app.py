@@ -586,8 +586,14 @@ elif seccion == "ISO 38500":
             evaluacion_iso[evaluacion_iso["Resultado"] == resultado_eval]
         mostrar_evaluacion(datos_eval, f"Puntos de la norma evaluados: {len(datos_eval)}")
 
-    # Brechas y plan de acción: principios sin indicadores y las iniciativas del portafolio que los atienden
-    if principios_sin_datos:
+    # Brechas y plan de acción (hoja "Plan de accion" del Excel)
+    hoja_plan = hoja_si_existe("Plan de accion")
+    if hoja_plan is not None and "Acción en el portafolio" in hoja_plan.columns:
+        hoja_plan["Presupuesto"] = numero(hoja_plan["Presupuesto"]).apply(lambda v: millones(v) if pd.notna(v) else "")
+        with st.container(border=True):
+            st.markdown("**Brechas y plan de acción**")
+            st.dataframe(hoja_plan, hide_index=True)
+    elif principios_sin_datos:
         BRECHAS = {
             "Datos y decisiones": ("No hay indicadores de calidad ni de uso de los datos",
                                    ["gobernanza del dato", "Analytics"]),
