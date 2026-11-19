@@ -1,0 +1,422 @@
+{
+  "name": "Flujo Gobierno TI ISO 38500",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Evaluación de madurez de Gobierno de TI",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "archivo",
+              "fieldType": "file",
+              "fieldName": "archivo",
+              "multipleFiles": false,
+              "acceptFileTypes": ".xlsx",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "path": "gobierno-ti-iso38500"
+        }
+      },
+      "id": "b1830428-a154-472e-ade9-7fe7f1270540",
+      "name": "Cargar Excel",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.6,
+      "position": [
+        -32,
+        0
+      ],
+      "webhookId": "4876bee4-9443-43f8-a4d6-7f08bc9046d2"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "archivo",
+        "options": {
+          "headerRow": false,
+          "sheetName": "Assessment"
+        }
+      },
+      "id": "6a8f1fff-9c2f-4484-8283-e04306579046",
+      "name": "Leer Assessment",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.2,
+      "position": [
+        272,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const NIV=[[0.857,5,'Optimizado'],[0.714,4,'Cuantitativo'],[0.571,3,'Definido'],[0.428,2,'Gestionado'],[0.285,1,'Inicial'],[0,0,'Incompleto']];\nconst norm=s=>String(s==null?'':s).trim().toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'');\nconst PTS={si:2,parcial:1,no:0};\nconst map={};\nfor(const it of $input.all()){\n  const r=(Array.isArray(it.json.row)?it.json.row:Object.values(it.json)).map(c=>c==null?'':c);\n  const e=r.findIndex(c=>norm(c) in PTS);\n  if(e<0) continue;\n  let tag=null;\n  for(const c of r){const m=String(c).match(/^\\[ISO 38500\\s*[–-]\\s*([^\\]]+)\\]/); if(m){tag=m[1].trim();break;}}\n  if(!tag) continue;\n  const m=map[tag]||(map[tag]={principio:tag,preguntas:0,puntos:0,maximo:0});\n  m.preguntas++; m.puntos+=PTS[norm(r[e])]; m.maximo+=2;\n}\nconst arr=Object.values(map);\nconst P=arr.reduce((a,m)=>a+m.puntos,0), M=arr.reduce((a,m)=>a+m.maximo,0), pc=P/M;\nconst nv=NIV.find(n=>pc>=n[0]);\nreturn arr.map(m=>{const p=m.puntos/m.maximo;\n  return {json:{...m,porcentaje:Math.round(p*1000)/10,\n  lectura:p>=0.7?'Fortaleza':p>=0.4?'En desarrollo':'Brecha',\n  puntos_totales:P,maximo_total:M,porcentaje_global:Math.round(pc*1000)/10,\n  nivel:'Nivel '+nv[1]+' '+nv[2]}}});"
+      },
+      "id": "cf63068b-23ec-44f1-ae3f-825ae054fdfb",
+      "name": "Evaluar",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.lectura }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "Fortaleza"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Fortaleza"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.lectura }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "En desarrollo"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "En desarrollo"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.lectura }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "Brecha"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Brecha"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "17825136-a336-4bb7-bd1c-005862d5a6cc",
+      "name": "Dirigir",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        800,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "accion-1",
+              "name": "accion",
+              "value": "Mantener y documentar buenas prácticas",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "21d937fa-d35b-4f62-8ab2-411d53a2bf93",
+      "name": "Acción Fortaleza",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        128
+      ]
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "id": "4fc262f9-f880-4746-ae83-7d4f2ee56b95",
+      "name": "Unir resultados",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1248,
+        304
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "accion-2",
+              "name": "accion",
+              "value": "Formalizar y estandarizar procesos",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "a18a47af-f2b0-45af-88a0-d23c5d028bb7",
+      "name": "Acción En desarrollo",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        320
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "accion-3",
+              "name": "accion",
+              "value": "Prioridad alta: plan de mejora con responsables y KPI",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "bf6f848d-49da-4102-b7b1-6a6fe8d22889",
+      "name": "Acción Brecha",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1024,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "fileName": "resultados_gobierno_ti_iso38500.xlsx",
+          "sheetName": "Resultados"
+        }
+      },
+      "id": "3261025c-b8ae-494c-b9d7-5089a0a28aa2",
+      "name": "Generar Excel de resultados",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.2,
+      "position": [
+        1280,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "completion",
+        "respondWith": "returnBinary",
+        "completionTitle": "Resultados generados",
+        "completionMessage": "Descarga el Excel con la evaluación de madurez ISO 38500.",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "7e7cc0d1-97d1-46ed-8a69-5dd46d09a051",
+      "name": "Descargar resultados",
+      "type": "n8n-nodes-base.form",
+      "typeVersion": 2.5,
+      "position": [
+        1536,
+        0
+      ],
+      "webhookId": "aa969515-ab1f-4ec9-acd7-cb477cf965aa"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Cargar Excel": {
+      "main": [
+        [
+          {
+            "node": "Leer Assessment",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer Assessment": {
+      "main": [
+        [
+          {
+            "node": "Evaluar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluar": {
+      "main": [
+        [
+          {
+            "node": "Dirigir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Dirigir": {
+      "main": [
+        [
+          {
+            "node": "Acción Fortaleza",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Acción En desarrollo",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Acción Brecha",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acción Fortaleza": {
+      "main": [
+        [
+          {
+            "node": "Unir resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Unir resultados": {
+      "main": [
+        [
+          {
+            "node": "Generar Excel de resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Acción En desarrollo": {
+      "main": [
+        [
+          {
+            "node": "Unir resultados",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Acción Brecha": {
+      "main": [
+        [
+          {
+            "node": "Unir resultados",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Generar Excel de resultados": {
+      "main": [
+        [
+          {
+            "node": "Descargar resultados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0f755e7a-bd5d-4565-8764-c38decdf4037",
+  "meta": {
+    "instanceId": "a12374101ea7e9cb94f36c302b5bdcfe080dd9f2513b17fea9536206e1b99d85"
+  },
+  "nodeGroups": [
+    {
+      "id": "5f0f5efc-51b7-424e-af59-9cadd2bac0aa",
+      "name": "Evaluar madurez",
+      "nodeIds": [
+        "6a8f1fff-9c2f-4484-8283-e04306579046",
+        "cf63068b-23ec-44f1-ae3f-825ae054fdfb"
+      ],
+      "description": "Lee la hoja Assessment del Excel subido y puntúa cada principio ISO 38500 y el nivel de madurez global"
+    },
+    {
+      "id": "fba6a4a0-d3ce-4a22-8eae-2e0d97276ed5",
+      "name": "Dirigir acciones",
+      "nodeIds": [
+        "17825136-a336-4bb7-bd1c-005862d5a6cc",
+        "21d937fa-d35b-4f62-8ab2-411d53a2bf93",
+        "a18a47af-f2b0-45af-88a0-d23c5d028bb7",
+        "bf6f848d-49da-4102-b7b1-6a6fe8d22889",
+        "4fc262f9-f880-4746-ae83-7d4f2ee56b95"
+      ],
+      "description": "Clasifica cada principio en fortaleza, en desarrollo o brecha y le asigna una acción recomendada"
+    }
+  ],
+  "id": "fsPldK9uLdwDc2KE",
+  "tags": []
+}
